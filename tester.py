@@ -5,6 +5,22 @@ import subprocess
 from time import sleep
 from termcolor import colored, cprint
 
+import yaml
+
+data_loaded = {}
+with open("apnames.yaml") as stream:
+    try:
+        data_loaded = yaml.safe_load(stream)
+    except yaml.YAMLError as exc:
+        pass
+
+mac_lookup = {}
+max_ap_name_length = len("unknown")
+for ap, macs in data_loaded.items():
+    max_ap_name_length = max(max_ap_name_length, len(ap))
+    for mac in macs:
+        mac_lookup[mac] = ap
+
 def ping(host):
     """
     Returns True if host (str) responds to a ping request.
@@ -16,10 +32,13 @@ def ping(host):
 
     return subprocess.call(command, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT) == 0
 
+def getnamestr(bssid):
+    return mac_lookup.get(bssid, "unknown").ljust(max_ap_name_length)
+
 nmcli.disable_use_sudo()
 print("bssid", "freq", "signal", "rate")
 while True:
     for x in [x for x in nmcli.device.wifi() if x.in_use]:
-        print(x.bssid, x.freq, x.signal, x.rate, x.security, end=" ")
+        print(x.bssid, getnamestr(x.bssid), x.freq, x.signal, x.rate, x.security, end=" ")
         cprint(" OK ", "green") if ping("8.8.8.8") else cprint("FAIL", "red")
         sleep(1)
