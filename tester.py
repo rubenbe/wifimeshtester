@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-import nmcli
 import subprocess
 from time import sleep
-from termcolor import colored, cprint
 
+import nmcli
+from termcolor import cprint
 import yaml
 
 data_loaded = {}
