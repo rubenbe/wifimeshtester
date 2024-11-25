@@ -21,6 +21,7 @@ for ap, macs in data_loaded.items():
     for mac in macs:
         mac_lookup[mac] = ap
 
+
 def ping(host):
     """
     Returns True if host (str) responds to a ping request.
@@ -28,17 +29,27 @@ def ping(host):
     """
 
     # Building the command. Ex: "ping -c 1 google.com"
-    command = ['ping', "-c", '1', host]
+    command = ["ping", "-W", "1", "-c", "1", host]
 
-    return subprocess.call(command, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT) == 0
+    return (
+        subprocess.call(command, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+        == 0
+    )
+
 
 def getnamestr(bssid):
     return mac_lookup.get(bssid, "unknown").ljust(max_ap_name_length)
+
 
 nmcli.disable_use_sudo()
 print("bssid", "freq", "signal", "rate")
 while True:
     for x in [x for x in nmcli.device.wifi() if x.in_use]:
-        print(x.bssid, getnamestr(x.bssid), x.freq, x.signal, x.rate, x.security, end=" ")
-        cprint(" OK ", "green") if ping("8.8.8.8") else cprint("FAIL", "red")
-        sleep(1)
+        print(
+            x.bssid, getnamestr(x.bssid), x.freq, x.signal, x.rate, x.security, end=" "
+        )
+        if ping("8.8.8.8"):
+            cprint(" OK ", "green")
+            sleep(1)
+        else:
+            cprint("FAIL", "red")
